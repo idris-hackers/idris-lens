@@ -2,6 +2,8 @@ module Lens
 
 import Control.Category
 
+%access public
+
 -- Store comonad
 
 data Store s a = MkStore (s -> a) s
