@@ -2,6 +2,8 @@ module Lens
 
 import Control.Category
 
+-- Store comonad
+
 data Store s a = MkStore (s -> a) s
 
 class Functor w => Comonad (w : Type -> Type) where
@@ -51,6 +53,8 @@ peek s (MkStore f _) = f s
 peeks : (s -> s) -> Store s a -> a
 peeks f (MkStore g s) = g (f s)
 
+-- Lenses
+
 data Lens a b = MkLens (a -> Store b a)
 
 instance Category Lens where
@@ -85,3 +89,25 @@ infixr 4 ^=
 infixr 4 ^%=
 (^%=) : Lens a b -> (b -> b) -> a -> a
 (^%=) = modL
+
+-- Partial lenses
+
+data PLens a b = MkPLens (a -> Maybe (Store b a))
+
+instance Category PLens where
+  id = MkPLens (Just . MkStore id)
+  (.) (MkPLens f) (MkPLens g) = MkPLens (\a => do
+    MkStore wba b <- g a
+    MkStore wcb c <- f b
+    return (MkStore (wba . wcb) c))
+
+plens : (a -> Either a (Store b a)) -> PLens a b
+plens f = MkPLens $ either (const Nothing) Just . f
+
+getPL : PLens a b -> a -> Maybe b
+getPL (MkPLens f) a = map pos (f a)
+
+justPL : PLens (Maybe a) a
+justPL = MkPLens (\ma => do
+  a <- ma
+  return (MkStore Just a))
