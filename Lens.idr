@@ -96,6 +96,12 @@ infixr 4 ^%=
 (^%=) : Lens a b -> (b -> b) -> a -> a
 (^%=) = modL
 
+fstLens : Lens (a,b) a
+fstLens = MkLens $ \(a,b) => MkStore (\ a' => (a', b)) a
+
+sndLens : Lens (a,b) b
+sndLens = MkLens $ \(a,b) => MkStore (\ b' => (a, b')) b
+
 -- Partial lenses
 
 data PLens a b = MkPLens (a -> Maybe (Store b a))
