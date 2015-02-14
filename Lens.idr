@@ -80,6 +80,10 @@ setL (MkLens f) b = peek b . f
 modL : Lens a b -> (b -> b) -> a -> a
 modL (MkLens f) g = peeks g . f
 
+mergeL : Lens a c -> Lens b c -> Lens (Either a b) c
+mergeL (MkLens f) (MkLens g) = MkLens $ either (\a => map Left $ f a)
+                                               (\b => map Right $ g b)
+
 infixr 0 ^$
 (^$) : Lens a b -> a -> b
 (^$) = getL
