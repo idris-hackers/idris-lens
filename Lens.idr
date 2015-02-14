@@ -80,6 +80,10 @@ setL (MkLens f) b = peek b . f
 modL : Lens a b -> (b -> b) -> a -> a
 modL (MkLens f) g = peeks g . f
 
+mergeL : Lens a c -> Lens b c -> Lens (Either a b) c
+mergeL (MkLens f) (MkLens g) = MkLens $ either (\a => map Left $ f a)
+                                               (\b => map Right $ g b)
+
 infixr 0 ^$
 (^$) : Lens a b -> a -> b
 (^$) = getL
@@ -91,6 +95,12 @@ infixr 4 ^=
 infixr 4 ^%=
 (^%=) : Lens a b -> (b -> b) -> a -> a
 (^%=) = modL
+
+fstLens : Lens (a,b) a
+fstLens = MkLens $ \(a,b) => MkStore (\ a' => (a', b)) a
+
+sndLens : Lens (a,b) b
+sndLens = MkLens $ \(a,b) => MkStore (\ b' => (a, b')) b
 
 -- Partial lenses
 
