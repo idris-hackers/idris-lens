@@ -1,3 +1,5 @@
 package lens
 
 modules = Lens
+
+opts = "-p effects"
