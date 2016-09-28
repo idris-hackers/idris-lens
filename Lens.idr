@@ -2,17 +2,17 @@ module Lens
 
 import Control.Category
 
-%access public
+%access public export
 
 -- Store comonad
 
 data Store s a = MkStore (s -> a) s
 
-class Functor w => Comonad (w : Type -> Type) where
+interface Functor w => Comonad (w : Type -> Type) where
   extract : w a -> a
   extend : (w a -> b) -> w a -> w b
 
-class Comonad w => VerifiedComonad (w : Type -> Type) where
+interface Comonad w => VerifiedComonad (w : Type -> Type) where
   comonadLaw1 : (wa : w a) ->
                 extend extract wa = wa
   comonadLaw2 : (f : w a -> b) ->
@@ -23,28 +23,28 @@ class Comonad w => VerifiedComonad (w : Type -> Type) where
                 (wa : w a) ->
                 extend f (extend g wa) = extend (\d => f (extend g d)) wa
 
-instance Functor (Store s) where
+Functor (Store s) where
   map f (MkStore g a) = MkStore (f . g) a
 
-instance Comonad (Store s) where
+Comonad (Store s) where
   extract (MkStore f a) = f a
   extend f (MkStore g a) = MkStore (\b => f (MkStore g b)) a
 
-instance VerifiedComonad (Store s) where
-  comonadLaw1 (MkStore f a) = ?storeIdentityProof
-  comonadLaw2 f (MkStore g a) = Refl
-  comonadLaw3 f g (MkStore h a) = Refl
+-- VerifiedComonad (Store s) where
+--   comonadLaw1 (MkStore f a) = ?storeIdentityProof
+--   comonadLaw2 f (MkStore g a) = Refl
+--   comonadLaw3 f g (MkStore h a) = Refl
 
--- TODO: This is evil.
--- Supposedly (jonsterling) this definition used to work without the believe_me.
-private
-eta : (f : a -> b) -> f = (\c => f c)
-eta g = believe_me Refl {g}
+-- -- TODO: This is evil.
+-- -- Supposedly (jonsterling) this definition used to work without the believe_me.
+-- private
+-- eta : (f : a -> b) -> f = (\c => f c)
+-- eta g = believe_me Refl {g}
 
-storeIdentityProof = proof
-  intros
-  rewrite eta f
-  trivial
+-- storeIdentityProof = proof
+--   intros
+--   rewrite eta f
+--   trivial
 
 pos : Store s a -> s
 pos (MkStore _ s) = s
@@ -59,7 +59,7 @@ peeks f (MkStore g s) = g (f s)
 
 data Lens a b = MkLens (a -> Store b a)
 
-instance Category Lens where
+Category Lens where
   id = MkLens (MkStore id)
   (.) (MkLens f) (MkLens g) = MkLens (\a => case g a of
     MkStore ba b => case f b of
@@ -106,7 +106,7 @@ sndLens = MkLens $ \(a,b) => MkStore (\ b' => (a, b')) b
 
 data PLens a b = MkPLens (a -> Maybe (Store b a))
 
-instance Category PLens where
+Category PLens where
   id = MkPLens (Just . MkStore id)
   (.) (MkPLens f) (MkPLens g) = MkPLens (\a => do
     MkStore wba b <- g a
