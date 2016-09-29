@@ -111,7 +111,7 @@ Category PLens where
   (.) (MkPLens f) (MkPLens g) = MkPLens (\a => do
     MkStore wba b <- g a
     MkStore wcb c <- f b
-    return (MkStore (wba . wcb) c))
+    pure (MkStore (wba . wcb) c))
 
 plens : (a -> Either a (Store b a)) -> PLens a b
 plens f = MkPLens $ either (const Nothing) Just . f
@@ -122,4 +122,4 @@ getPL (MkPLens f) a = map pos (f a)
 justPL : PLens (Maybe a) a
 justPL = MkPLens (\ma => do
   a <- ma
-  return (MkStore Just a))
+  pure (MkStore Just a))
