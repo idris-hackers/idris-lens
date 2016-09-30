@@ -3,6 +3,7 @@ module Lens
 import Control.Category
 
 %access public export
+%default total
 
 -- Store comonad
 
@@ -14,14 +15,14 @@ interface Functor w => Comonad (w : Type -> Type) where
 
 interface Comonad w => VerifiedComonad (w : Type -> Type) where
   comonadLaw1 : (wa : w a) ->
-                extend extract wa = wa
+                Lens.extend Lens.extract wa = wa
   comonadLaw2 : (f : w a -> b) ->
                 (wa : w a) ->
-                extract (extend f wa) = f wa
+                Lens.extract (Lens.extend f wa) = f wa
   comonadLaw3 : (f : w b -> c) ->
                 (g : w a -> b) ->
                 (wa : w a) ->
-                extend f (extend g wa) = extend (\d => f (extend g d)) wa
+                Lens.extend f (Lens.extend g wa) = Lens.extend (\d => f (Lens.extend g d)) wa
 
 Functor (Store s) where
   map f (MkStore g a) = MkStore (f . g) a
@@ -30,21 +31,11 @@ Comonad (Store s) where
   extract (MkStore f a) = f a
   extend f (MkStore g a) = MkStore (\b => f (MkStore g b)) a
 
--- VerifiedComonad (Store s) where
---   comonadLaw1 (MkStore f a) = ?storeIdentityProof
---   comonadLaw2 f (MkStore g a) = Refl
---   comonadLaw3 f g (MkStore h a) = Refl
 
--- -- TODO: This is evil.
--- -- Supposedly (jonsterling) this definition used to work without the believe_me.
--- private
--- eta : (f : a -> b) -> f = (\c => f c)
--- eta g = believe_me Refl {g}
-
--- storeIdentityProof = proof
---   intros
---   rewrite eta f
---   trivial
+VerifiedComonad (Store s) where
+  comonadLaw1 (MkStore f a) = Refl
+  comonadLaw2 f (MkStore g a) = Refl
+  comonadLaw3 f g (MkStore h a) = Refl
 
 pos : Store s a -> s
 pos (MkStore _ s) = s
